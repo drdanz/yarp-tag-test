@@ -16,8 +16,6 @@ on:
         description: 'Branch to tag'
         required: true
         default: 'yarp-3.5'
-      version:
-        description: 'Release version (generate automatically if empty)'
       prepare_next_stable:
         description: 'Prepare for the next stable release (true or false). Should be true unless this is the last release for current stable series.'
         required: true
@@ -30,6 +28,8 @@ on:
         description: 'Next feature release is a major release (true or false)'
         required: true
         default: 'false'
+      version:
+        description: 'Release version (generate automatically if empty)'
       main_branch:
         description: 'The master branch of the repository (default master).'
         required: true
@@ -306,7 +306,7 @@ jobs:
         git push -v origin v${YARP_VERSION}
 
     - name: Merge into master
-      if: ${{ github.event.inputs.branch != 'github.event.inputs.main_branch' }}
+      if: ${{ github.event.inputs.branch != github.event.inputs.main_branch }}
       run: |
         echo "Merge into ${YARP_MAIN_BRANCH}"
         git fetch origin
@@ -368,7 +368,7 @@ jobs:
 
 
     - name: Create the new stable branch
-      if: ${{ github.event.inputs.branch != 'github.event.inputs.main_branch' }}
+      if: ${{ github.event.inputs.branch == github.event.inputs.main_branch }}
       run: |
         echo "Create the new stable branch"
         git fetch origin
@@ -378,7 +378,7 @@ jobs:
         git push -v origin ${YARP_NEXT_STABLE_BRANCH}
 
     - name: Prepare for next stable release
-      if: ${{ github.event.inputs.prepare_next_stable == 'true' }}
+      if: ${{ (github.event.inputs.prepare_next_stable == 'true') && (github.event.inputs.branch != github.event.inputs.main_branch) }}
       env:
         INPUT_PUSH_TOKEN: ${{ secrets.drdanz_TOKEN }}
       run: |
